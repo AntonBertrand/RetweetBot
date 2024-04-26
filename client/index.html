@@ -1,0 +1,289 @@
+<style>
+    body {
+        padding: 2rem;
+        color: white;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .header {
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .container {
+        background-color: rgb(37, 37, 37);
+        border: rgb(0, 0, 0) solid 1px;
+        border-radius: 0.4rem;
+    }
+
+    input {
+        background-color: rgb(73, 73, 73);
+        border-radius: 0.3rem;
+        border: solid 1px rgb(107, 107, 107);
+        margin-top: 0.5rem;
+        color: white;
+        width: 75%;
+    }
+
+    .formField {
+        display: flex;
+        flex-direction: column;
+    }
+
+    textarea {
+        width: 100%;
+    }
+
+    .settings {
+        display: flex;
+        flex-direction: row;
+        border: solid black 1px;
+        padding: 2rem;
+    }
+
+    .settings_left {
+        width: 100%;
+    }
+
+    .settings_left form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .settings_right {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-content: center;
+    }
+
+    .groups {
+        border: solid black 1px;
+        padding: 2rem;
+    }
+
+    .startStopBtn{
+        width: 100px;
+        height: 100px;
+        background-color: rgba(0, 128, 0, 0.479);
+        border: white solid 1px;
+        border-radius: 0.3rem;
+        cursor: pointer;
+        color: white;
+        font-weight: bold;
+    }
+
+    .addGroupBtn {
+        background: black;
+        color: white;
+        border: none;
+        padding: 0.4rem;
+        cursor: pointer;
+        border-radius: 0.4rem;
+        width: 25%;
+        margin-top: 1rem;
+    }
+
+    .groups form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .log {
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+    }
+
+    .log b{
+        padding-bottom: 1rem;
+    }
+</style>
+
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+    <script>
+        var twitterGroupList = [];  // Array to hold groups with URL and count
+        var globalSecondsBetweenGroups = 60;  // Default value
+        var globalSecondsBetweenGroupLists = 120;  // Default value
+
+        
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load textarea content from localStorage if available
+            var savedData = localStorage.getItem('retweetGroupList');
+            if (savedData) {
+                document.getElementById('retweetGroupList').value = savedData;
+            }
+
+            // Load seconds settings from localStorage
+            var savedSecondsBetweenGroups = localStorage.getItem('globalSecondsBetweenGroups');
+            var savedSecondsBetweenGroupLists = localStorage.getItem('globalSecondsBetweenGroupLists');
+
+            if (savedSecondsBetweenGroups) {
+                globalSecondsBetweenGroups = parseInt(savedSecondsBetweenGroups, 10);
+                document.getElementById('secondsBetweenGroups').value = savedSecondsBetweenGroups;
+            }
+
+            if (savedSecondsBetweenGroupLists) {
+                globalSecondsBetweenGroupLists = parseInt(savedSecondsBetweenGroupLists, 10);
+                document.getElementById('secondsBetweenGroupLists').value = savedSecondsBetweenGroupLists;
+            }
+        });
+
+        var ws = new WebSocket('ws://localhost:3000');
+        ws.onmessage = function(event) {
+            var consoleOutput = document.getElementById('consoleOutput');
+            consoleOutput.value += event.data + '\n'; // Append new log message
+            consoleOutput.scrollTop = consoleOutput.scrollHeight; // Auto-scroll to the bottom
+        };
+
+        ws.onerror = function(event) {
+            console.error("WebSocket error observed:", event);
+        };
+
+    
+        function runBot() {
+            
+            if (!clientName) { // Check if clientName is not provided
+                alert("Client name field cannot be empty.");
+                return;
+            }
+
+             // Parse the textarea content into twitterGroupList
+            var retweetGroupList = document.getElementById('retweetGroupList').value;
+            var lines = retweetGroupList.split('\n');
+            twitterGroupList = lines.map(line => {
+                var parts = line.split(' - ');
+                return { url: parts[0], count: parseInt(parts[1], 10) };
+            });
+
+            // Filter out invalid entries (where count is NaN)
+            twitterGroupList = twitterGroupList.filter(group => !isNaN(group.count));
+    
+            // Send a fetch request with the twitterGroupList
+            fetch('http://localhost:3000/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    clientName: clientName,
+                    secondsBetweenGroups: globalSecondsBetweenGroups,
+                    secondsBetweenGroupLists: globalSecondsBetweenGroupLists,
+                    twitterGroupList: twitterGroupList
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        function stopBot() {
+            
+            // Send a fetch request with the twitterGroupList
+            fetch('http://localhost:3000/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        }
+		
+		function saveSettings() {
+            event.preventDefault();  // Prevent form submission and page refresh
+
+            try {
+                clientName = document.getElementById('clientName').value;
+                globalSecondsBetweenGroups = parseInt(document.getElementById('secondsBetweenGroups').value, 10) || globalSecondsBetweenGroups;
+                globalSecondsBetweenGroupLists = parseInt(document.getElementById('secondsBetweenGroupLists').value, 10) || globalSecondsBetweenGroupLists;
+
+                localStorage.setItem('retweetGroupList', document.getElementById('retweetGroupList').value);  // Save retweet group list
+                localStorage.setItem('globalSecondsBetweenGroups', globalSecondsBetweenGroups.toString());  // Save seconds between groups
+                localStorage.setItem('globalSecondsBetweenGroupLists', globalSecondsBetweenGroupLists.toString());  // Save seconds between group lists
+
+            alert("Settings Saved!");
+            } catch (error) {
+                alert("Error saving settings!");
+            }
+        }
+    
+        function addGroup(event) {
+            event.preventDefault();  // Prevent form submission and page refresh
+    
+            var groupUrl = document.getElementById('groupUrl').value;
+            var groupUrlCount = document.getElementById('groupUrlCount').value;
+            var retweetGroupList = document.getElementById('retweetGroupList');
+            
+            if (groupUrl && groupUrlCount) {
+                retweetGroupList.value += `${groupUrl} - ${groupUrlCount}\n`;
+                twitterGroupList.push({ url: groupUrl, count: parseInt(groupUrlCount, 10) });
+    
+                // Clear the input fields
+                document.getElementById('groupUrl').value = '';
+                document.getElementById('groupUrlCount').value = '';
+            } else {
+                console.log("URL and/or count not provided");
+            }
+        }
+
+        function clearData() {
+            localStorage.removeItem('retweetGroupList');
+            localStorage.removeItem('globalSecondsBetweenGroups');
+            localStorage.removeItem('globalSecondsBetweenGroupLists');
+            document.getElementById('retweetGroupList').value = '';  // Clear the textarea
+            document.getElementById('secondsBetweenGroups').value = '';  // Reset to default value
+            document.getElementById('secondsBetweenGroupLists').value = '';  // Reset to default value
+        }
+    </script>
+    
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Vanquish Digital Retweet Bot</h1>
+        </div>
+        <div class="settings">
+            <div class="settings_left"> 
+                <form action="">
+                    <div class="formField">
+                        <label for="clientName">Client Name:</label>
+                        <input type="text" id="clientName" name="clientName">
+                    </div>
+                    <div class="formField">
+                        <label for="secondsBetweenGroups">Seconds Between Groups:</label>
+                        <input type="text" id="secondsBetweenGroups" name="secondsBetweenGroups" placeholder="60">
+                    </div>
+                    <div class="formField">
+                        <label for="secondsBetweenGroupLists">Auto Restart (Seconds):</label>
+                        <input type="text" id="secondsBetweenGroupLists" name="secondsBetweenGroupLists" placeholder="120">
+                    </div>
+                    <button class="addGroupBtn" onclick="saveSettings()">Save Settings</button>
+                </form>
+            </div>
+            <div class="settings_right">
+                <button class="startStopBtn" onclick="runBot()">Start</button>
+                <button class="startStopBtn" onclick="stopBot()">Stop</button>
+            </div>
+        </div>
+        <div class="groups">
+            <p>List of Groups:</p>
+            <textarea name="retweetGroupList" id="retweetGroupList" cols="30" rows="5" placeholder="https://twitter.com/messages/1778153056699404702 - 2"></textarea>
+        </div>
+        <div class="log">
+            <b>Console Log</b>
+            <textarea name="consoleOutput" id="consoleOutput" cols="30" rows="10" readonly></textarea>
+        </div>
+    </div>
+</body>

@@ -1,0 +1,95 @@
+{
+  "cookies": [
+    {
+      "name": "guest_id",
+      "value": "v1%3A171253183285034986",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1746746233.04013,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "gt",
+      "value": "1777113427200074208",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1712540833.159294,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_twitter_sess",
+      "value": "BAh7CSIKZmxhc2hJQzonQWN0aW9uQ29udHJvbGxlcjo6Rmxhc2g6OkZsYXNo%250ASGFzaHsABjoKQHVzZWR7ADoPY3JlYXRlZF9hdGwrCNMF2rqOAToMY3NyZl9p%250AZCIlMTdlMjY4NTE3OGIzY2Y2MDFhNGZmODkxNzc3NTQxYzM6B2lkIiU5ZjRh%250ANjdhZGU2NzUyYTJkYTJkM2IyNTUwYTBiYjNmMQ%253D%253D--570aca4a8af1e7edefb57ac51f24175b8b2e183c",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "kdt",
+      "value": "oZbrOSrFGRmdK5rReSy2zUeb3WceLSWP1nPp49yQ",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1746746236.570496,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "auth_token",
+      "value": "77821cd02bd274348544dc7fb7b4aa117c547896",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1746746236.570611,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ct0",
+      "value": "c3d255c19e0de87043b481d425dbc288e20b08896815189569ac47ff7f9fc7bd6c2437b4b3ba69c09cfa154d0d1f53d4f84acb1edf80101d69765b9ae00839d6a2e775c2479229a704ea39242b7c57b9",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1746746236.749285,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "att",
+      "value": "1-38buyqjNIaCGG538gB9yNYHhjdvWlzweo4rrEhIc",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1712618236.949473,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "lang",
+      "value": "en",
+      "domain": "twitter.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "twid",
+      "value": "u%3D1761121746638311424",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1744067838.165144,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": []
+}
