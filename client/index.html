@@ -126,8 +126,8 @@
         var proxyAddress;
         var proxyUsername;
         var proxyPassword;
+        var clientName;  
 
-        
 
         document.addEventListener('DOMContentLoaded', function() {
             // Load textarea content from localStorage if available
@@ -142,6 +142,8 @@
             var savedProxyAddress = localStorage.getItem('globalProxyAddress');
             var savedProxyUsername = localStorage.getItem('globalProxyUsername');
             var savedProxyPassword = localStorage.getItem('globalProxyPassword');
+            var savedClientName = localStorage.getItem('clientName');
+
 
             if (savedSecondsBetweenGroups) {
                 globalSecondsBetweenGroups = parseInt(savedSecondsBetweenGroups, 10);
@@ -165,6 +167,11 @@
             if (savedProxyPassword) {
                 proxyPassword = savedProxyPassword;  // Correct assignment without parsing to int
                 document.getElementById('proxyPassword').value = savedProxyPassword;
+            }
+
+            if (savedClientName) {
+                clientName = savedClientName;
+                document.getElementById('clientName').value = savedClientName;
             }
         });
 
@@ -253,6 +260,8 @@
                 localStorage.setItem('globalProxyUsername', document.getElementById('proxyUsername').value);
                 localStorage.setItem('globalProxyPassword', document.getElementById('proxyPassword').value);
 
+                localStorage.setItem('clientName', clientName);  // Save client name
+
 
             alert("Settings Saved!");
             } catch (error) {
@@ -280,6 +289,7 @@
         }
 
         function clearData() {
+            localStorage.removeItem('clientName');
             localStorage.removeItem('retweetGroupList');
             localStorage.removeItem('globalSecondsBetweenGroups');
             localStorage.removeItem('globalSecondsBetweenGroupLists');
@@ -288,6 +298,7 @@
             localStorage.removeItem('globalProxyUsername');
             localStorage.removeItem('globalProxyPassword');
 
+            document.getElementById('clientName').value = '';  // Clear the client name input
             document.getElementById('retweetGroupList').value = '';  // Clear the textarea
             document.getElementById('secondsBetweenGroups').value = '';  // Reset to default value
             document.getElementById('secondsBetweenGroupLists').value = '';  // Reset to default value
