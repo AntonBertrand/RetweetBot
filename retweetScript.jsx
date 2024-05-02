@@ -169,7 +169,7 @@ async function connectionErrorCheck(page, broadcast) {
   
     try {
       await page.getByTestId('retweet').first().click();
-      // await page.getByText('Repost').click();  
+      await page.getByText('Repost').click();  
     } catch (error) {
       logMsg(`Failed to Retweet post`, broadcast);
     }

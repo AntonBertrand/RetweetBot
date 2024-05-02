@@ -44,7 +44,7 @@
     }
 
     .settings_left {
-        width: 100%;
+        width: 33%;
     }
 
     .settings_left form {
@@ -54,10 +54,20 @@
     }
 
     .settings_right {
-        width: 100%;
+        width: 33%;
         display: flex;
         justify-content: center;
         align-content: center;
+    }
+
+    .settings_middle{
+        width: 33%;
+    }
+
+    .settings_middle form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
     .groups {
@@ -101,6 +111,7 @@
     .log b{
         padding-bottom: 1rem;
     }
+
 </style>
 
 <head>
@@ -112,6 +123,9 @@
         var twitterGroupList = [];  // Array to hold groups with URL and count
         var globalSecondsBetweenGroups = 60;  // Default value
         var globalSecondsBetweenGroupLists = 120;  // Default value
+        var proxyAddress;
+        var proxyUsername;
+        var proxyPassword;
 
         
 
@@ -125,6 +139,9 @@
             // Load seconds settings from localStorage
             var savedSecondsBetweenGroups = localStorage.getItem('globalSecondsBetweenGroups');
             var savedSecondsBetweenGroupLists = localStorage.getItem('globalSecondsBetweenGroupLists');
+            var savedProxyAddress = localStorage.getItem('globalProxyAddress');
+            var savedProxyUsername = localStorage.getItem('globalProxyUsername');
+            var savedProxyPassword = localStorage.getItem('globalProxyPassword');
 
             if (savedSecondsBetweenGroups) {
                 globalSecondsBetweenGroups = parseInt(savedSecondsBetweenGroups, 10);
@@ -134,6 +151,20 @@
             if (savedSecondsBetweenGroupLists) {
                 globalSecondsBetweenGroupLists = parseInt(savedSecondsBetweenGroupLists, 10);
                 document.getElementById('secondsBetweenGroupLists').value = savedSecondsBetweenGroupLists;
+            }
+            if (savedProxyAddress) {
+                proxyAddress = savedProxyAddress;  // Correct assignment without parsing to int
+                document.getElementById('proxyAddress').value = savedProxyAddress;
+            }
+
+            if (savedProxyUsername) {
+                proxyUsername = savedProxyUsername;  // Correct assignment without parsing to int
+                document.getElementById('proxyUsername').value = savedProxyUsername;
+            }
+
+            if (savedProxyPassword) {
+                proxyPassword = savedProxyPassword;  // Correct assignment without parsing to int
+                document.getElementById('proxyPassword').value = savedProxyPassword;
             }
         });
 
@@ -177,7 +208,10 @@
                     clientName: clientName,
                     secondsBetweenGroups: globalSecondsBetweenGroups,
                     secondsBetweenGroupLists: globalSecondsBetweenGroupLists,
-                    twitterGroupList: twitterGroupList
+                    twitterGroupList: twitterGroupList,
+                    proxyAddress: proxyAddress,
+                    proxyUsername: proxyUsername,
+                    proxyPassword: proxyPassword,
                 })
             })
             .then(response => response.json())
@@ -207,9 +241,18 @@
                 globalSecondsBetweenGroups = parseInt(document.getElementById('secondsBetweenGroups').value, 10) || globalSecondsBetweenGroups;
                 globalSecondsBetweenGroupLists = parseInt(document.getElementById('secondsBetweenGroupLists').value, 10) || globalSecondsBetweenGroupLists;
 
+                proxyAddress = document.getElementById('proxyAddress').value;
+                proxyUsername = document.getElementById('proxyUsername').value;
+                proxyPassword = document.getElementById('proxyPassword').value;
+
                 localStorage.setItem('retweetGroupList', document.getElementById('retweetGroupList').value);  // Save retweet group list
                 localStorage.setItem('globalSecondsBetweenGroups', globalSecondsBetweenGroups.toString());  // Save seconds between groups
                 localStorage.setItem('globalSecondsBetweenGroupLists', globalSecondsBetweenGroupLists.toString());  // Save seconds between group lists
+
+                localStorage.setItem('globalProxyAddress', document.getElementById('proxyAddress').value);
+                localStorage.setItem('globalProxyUsername', document.getElementById('proxyUsername').value);
+                localStorage.setItem('globalProxyPassword', document.getElementById('proxyPassword').value);
+
 
             alert("Settings Saved!");
             } catch (error) {
@@ -240,9 +283,18 @@
             localStorage.removeItem('retweetGroupList');
             localStorage.removeItem('globalSecondsBetweenGroups');
             localStorage.removeItem('globalSecondsBetweenGroupLists');
+
+            localStorage.removeItem('globalProxyAddress');
+            localStorage.removeItem('globalProxyUsername');
+            localStorage.removeItem('globalProxyPassword');
+
             document.getElementById('retweetGroupList').value = '';  // Clear the textarea
             document.getElementById('secondsBetweenGroups').value = '';  // Reset to default value
             document.getElementById('secondsBetweenGroupLists').value = '';  // Reset to default value
+
+            document.getElementById('proxyAddress').value = '';  // Clear the textarea
+            document.getElementById('proxyUsername').value = '';  // Reset to default value
+            document.getElementById('proxyPassword').value = '';  // Reset to default value
         }
     </script>
     
@@ -270,6 +322,22 @@
                         <input type="text" id="secondsBetweenGroupLists" name="secondsBetweenGroupLists" placeholder="120">
                     </div>
                     <button class="addGroupBtn" onclick="saveSettings()">Save Settings</button>
+                </form>
+            </div>
+            <div class="settings_middle"> 
+                <form action="">
+                    <div class="formField">
+                        <label for="proxyAddress">IP Address:</label>
+                        <input type="text" id="proxyAddress" name="proxyAddress">
+                    </div>
+                    <div class="formField">
+                        <label for="proxyUsername">Proxy Username:</label>
+                        <input type="text" id="proxyUsername" name="proxyUsername">
+                    </div>
+                    <div class="formField">
+                        <label for="proxyPassword">Proxy Password:</label>
+                        <input type="text" id="proxyPassword" name="proxyPassword">
+                    </div>
                 </form>
             </div>
             <div class="settings_right">

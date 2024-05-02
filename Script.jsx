@@ -43,14 +43,15 @@ function shuffleArray(array) {
 /* const secondsBetweenGroups = 30;
 const secondsBetweenGroupLists = 7200; */
 
-const retweetBot = async (twitterGroup, broadcast) => {
+const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast) => {
+    console.log(`Proxy Address: ${proxyAddress} Proxy Username: ${proxyUsername}  Proxy Password: ${proxyPassword}  Client Name: ${clientName}`);
     const browser = await chromium.launch({ 
         headless: false,
-        /* proxy: {
-            server: '168.158.85.101:12323',
-            username: '14ab3eeeb9ac8',
-            password: '4466f8f95f'
-          }, */
+        proxy: {
+            server: proxyAddress,
+            username: proxyUsername,
+            password: proxyPassword
+          }, 
         });
     const context = await browser.newContext({
         storageState: 'LoginAuth.json',
@@ -193,30 +194,30 @@ const retweetBot = async (twitterGroup, broadcast) => {
         
              // Add Gif to message
              
-        /* try {
-            logMsg(`Attempting to add GIF to group: ${twitterGroupId}`)
+        try {
+            logMsg(`Attempting to add GIF to group: ${twitterGroupId}`, broadcast)
             await page.getByLabel('Add a GIF').click();
             await page.getByTestId('gifSearchSearchInput').fill('thank you');
             await page.getByRole('button', { name: 'Love Hearts GIF' }).click();
-            logMsg(`Sucessfully added GIF to group: ${twitterGroupId}`)
+            logMsg(`Sucessfully added GIF to group: ${twitterGroupId}`, broadcast)
         } catch (error) {
-            logMsg(`FAILED to add GIF to group: ${twitterGroupId}`)
-        } */
+            logMsg(`FAILED to add GIF to group: ${twitterGroupId}`, broadcast)
+        } 
     
         
         await randomHalt(3, 7, broadcast);
     
     
         // Post message in groupchat with custom message
-        /* try {
-            logMsg(`Attempting to post message in group: ${twitterGroupId}`)
+        try {
+            logMsg(`Attempting to post message in group: ${twitterGroupId}`, broadcast)
             await page.getByTestId('dmComposerTextInput').click();
-            await page.getByTestId('dmComposerTextInput').fill('Follow\n@AlessaRubii');
+            await page.getByTestId('dmComposerTextInput').fill(`❤️❤️ Hit my clients pinned ❤️❤️ \n@${clientName}\n@${clientName}\n@${clientName}\n@${clientName}\n❤️❤️ HIT MY CLIENT ❤️❤️`);
             await page.getByTestId('dmComposerSendButton').click();
-            logMsg(`Message succesfully posted in group: ${twitterGroupId}`)
+            logMsg(`Message succesfully posted in group: ${twitterGroupId}`, broadcast)
         } catch (error) {
-            logMsg(`Message FAILED to posted in group: ${twitterGroupId}`)
-        } */
+            logMsg(`Message FAILED to posted in group: ${twitterGroupId}`, broadcast)
+        } 
 
         dropCount++;
         logMsg(`=========================================`, broadcast);
@@ -235,7 +236,6 @@ const retweetBot = async (twitterGroup, broadcast) => {
         for (let i = 0; i < twitterGroup.count; i++) {
 
             if (!await retweetPost(twitterUsers[i], page, browser, context, broadcast)) {
-                continueRunning = false;
                 retweetFailCount++;
             } else {
                 retweetCount++;
@@ -258,7 +258,7 @@ const retweetBot = async (twitterGroup, broadcast) => {
     
 } 
 
-async function script(twitterGroupList, secondsBetweenGroups, secondsBetweenGroupLists, broadcast) {
+async function script(twitterGroupList, secondsBetweenGroups, secondsBetweenGroupLists, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast) {
 
     if (isRunning) {
         logMsg("Script is already running. Concurrent execution attempt blocked.", broadcast);
@@ -273,7 +273,7 @@ async function script(twitterGroupList, secondsBetweenGroups, secondsBetweenGrou
         while (continueRunning) {
             for (let twitterGroup of twitterGroupList) {
                 if (!continueRunning) break; // Exit loop if the flag changes
-                await retweetBot(twitterGroup, broadcast);
+                await retweetBot(twitterGroup, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast);
                 if (!continueRunning) break;
                 logMsg(`Waiting ${secondsBetweenGroups} seconds between groups`, broadcast);
                 await new Promise(resolve => setTimeout(resolve, secondsBetweenGroups * 1000));
@@ -289,6 +289,8 @@ async function script(twitterGroupList, secondsBetweenGroups, secondsBetweenGrou
         logMsg(`Script execution complete. Lock reset.`, broadcast);
     }
 }
+
+
 
 function stopScript(broadcast) {
     logMsg(`Received request to stop Retweet Bot!`, broadcast);

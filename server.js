@@ -40,8 +40,8 @@ app.use(cors());
 app.use(express.json());
 
 app.post('/start', (req, res) => {
-    const { twitterGroupList, secondsBetweenGroups, secondsBetweenGroupLists } = req.body;
-    script(twitterGroupList, secondsBetweenGroups, secondsBetweenGroupLists, broadcast);
+    const { twitterGroupList, secondsBetweenGroups, secondsBetweenGroupLists, clientName, proxyAddress, proxyUsername, proxyPassword } = req.body;
+    script(twitterGroupList, secondsBetweenGroups, secondsBetweenGroupLists, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast);
     res.status(200).json(`Successfully ran script!`);
 });
 
