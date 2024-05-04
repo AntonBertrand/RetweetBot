@@ -224,7 +224,15 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
             logMsg(`Sucessfully added GIF to group: ${twitterGroupId}`, broadcast)
         } catch (error) {
             logMsg(`FAILED to add GIF to group: ${twitterGroupId}`, broadcast)
+            skipGroup = true;
         } 
+
+        if (skipGroup) {
+            logMsg("Skipping to the next group", broadcast);
+            await context.close();
+            await browser.close();
+            return;
+        }
     
         
         await randomHalt(2, 5, broadcast);
@@ -238,8 +246,16 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
             await page.getByTestId('dmComposerSendButton').click();
             logMsg(`Message succesfully posted in group: ${twitterGroupId}`, broadcast)
         } catch (error) {
-            logMsg(`Message FAILED to posted in group: ${twitterGroupId}`, broadcast)
+            logMsg(`Message FAILED to post in group: ${twitterGroupId}`, broadcast)
+            skipGroup = true;
         } 
+
+        if (skipGroup) {
+            logMsg("Skipping to the next group", broadcast);
+            await context.close();
+            await browser.close();
+            return;
+        }
 
         dropCount++;
         logMsg(`=========================================`, broadcast);
