@@ -133,7 +133,13 @@ async function connectionErrorCheck(page, broadcast) {
   
   
     // Navigates to the users Media
-    await page.getByRole('tab', { name: 'Media' }).click();
+    try {
+      await page.getByRole('tab', { name: 'Media' }).click();
+    } catch (error) {
+            // Likely failed because user has no media
+            logMsg(`Couldn't find the Media tab - Skipping user (${user})`, broadcast)
+            return;
+    }
   
     // Might need sensitiveContentWarningcheck here
     await sensitiveContentWarningCheck()

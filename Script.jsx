@@ -46,6 +46,7 @@ const secondsBetweenGroupLists = 7200; */
 const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast) => {
 
     let noUsersFoundCount = 0;
+    let skipGroup = false;
 
     console.log(`Proxy Address: ${proxyAddress} Proxy Username: ${proxyUsername}  Proxy Password: ${proxyPassword}  Client Name: ${clientName}`);
     const browser = await chromium.launch({ 
@@ -186,7 +187,8 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                 logMsg(`No users found, restarting...${noUsersFoundCount}`, broadcast);
 
                 if (noUsersFoundCount > 3) {
-                    logMsg("Restart limit reached - skipping to the next group", broadcast);
+                    logMsg("Restart limit reached!", broadcast);
+                    skipGroup = true;
                     break;
                 }
 
@@ -194,6 +196,13 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
 
             }
             break; // Exit the loop if users are found
+        }
+
+        if (skipGroup) {
+            logMsg("Skipping to the next group", broadcast);
+            await context.close();
+            await browser.close();
+            return;
         }
     
         if (!continueRunning) {
@@ -289,10 +298,14 @@ async function script(twitterGroupList, secondsBetweenGroups, secondsBetweenGrou
                 await retweetBot(twitterGroup, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast);
                 if (!continueRunning) break;
                 logMsg(`Waiting ${secondsBetweenGroups} seconds between groups`, broadcast);
+                logMsg(`Drop Count: ${dropCount}`, broadcast);
                 await new Promise(resolve => setTimeout(resolve, secondsBetweenGroups * 1000));
             }
             if (!continueRunning) break;
+            logMsg(`=========================================`, broadcast);
             logMsg(`Dropped in all groups, looping again in ${secondsBetweenGroupLists} seconds.`, broadcast);
+            logMsg(`Drop Count: ${dropCount}`, broadcast);
+            logMsg(`=========================================`, broadcast);
             await new Promise(resolve => setTimeout(resolve, secondsBetweenGroupLists * 1000)); // wait between cycles
         }
     } catch (error) {
