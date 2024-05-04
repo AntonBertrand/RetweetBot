@@ -92,6 +92,7 @@ async function connectionErrorCheck(page, broadcast) {
     logMsg(`Attempting navigation to: ${url} (${attemptCount + 1})`, broadcast);
     try {
       await page.goto(url);
+      await page.waitForTimeout(10000); // 10 seconds wait
       await page.waitForSelector('[data-testid="userActions"]');
     } catch (error) {
       if (attemptCount >= 2) {
@@ -101,7 +102,7 @@ async function connectionErrorCheck(page, broadcast) {
         }
       } else {
         logMsg(`Navigation failed, retrying... `, broadcast);
-        await page.waitForTimeout(10000); // 10 seconds wait
+        await page.waitForTimeout(20000); // 30 seconds wait
         await retryNavigation(url, page, broadcast, attemptCount + 1);
       }
     }
@@ -124,11 +125,11 @@ async function connectionErrorCheck(page, broadcast) {
         return;
     }
   
-    await randomHalt(3, 7, broadcast);
+    await randomHalt(6, 11, broadcast);
   
     await sensitiveContentWarningCheck()
   
-    await randomHalt(3, 7, broadcast);
+    await randomHalt(4, 11, broadcast);
   
   
     // Navigates to the users Media
@@ -147,7 +148,7 @@ async function connectionErrorCheck(page, broadcast) {
     }
   
   
-    await randomHalt(3, 7, broadcast);
+    await randomHalt(6, 20, broadcast);
   
   
     // Checks if media has a NSFW spoiler
@@ -162,18 +163,20 @@ async function connectionErrorCheck(page, broadcast) {
     // Clicks on the users first Media
     await page.locator('#verticalGridItem-0-profile-grid-0').click();
   
-    await randomHalt(3, 7, broadcast);
+    await randomHalt(6, 21, broadcast);
   
   
     // Reposts the select media
   
     try {
       await page.getByTestId('retweet').first().click();
+      await randomHalt(1, 5, broadcast);
       await page.getByText('Repost').click();  
     } catch (error) {
       logMsg(`Failed to Retweet post`, broadcast);
     }
   
+    await randomHalt(3, 7, broadcast);
     logMsg(`Post by ${user} retweeted!`, broadcast);
     return true;
   

@@ -44,6 +44,9 @@ function shuffleArray(array) {
 const secondsBetweenGroupLists = 7200; */
 
 const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast) => {
+
+    let noUsersFoundCount = 0;
+
     console.log(`Proxy Address: ${proxyAddress} Proxy Username: ${proxyUsername}  Proxy Password: ${proxyPassword}  Client Name: ${clientName}`);
     const browser = await chromium.launch({ 
         headless: false,
@@ -140,6 +143,8 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
 
             logMsg(`Navigating to Twitter Group: ${twitterGroupId}`, broadcast);
             await page.goto(twitterGroup.url);
+
+            await randomHalt(8, 30, broadcast);
     
             try {
                 logMsg("Waiting for group chat to load", broadcast);
@@ -163,7 +168,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                 }
             }
     
-            await randomHalt(3, 7, broadcast);
+            await randomHalt(4, 11, broadcast);
             await cookieDisclaimercheck(broadcast);
             await randomHalt(3, 7, broadcast);
     
@@ -177,8 +182,16 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
             }
     
             if (scrapedTwitterUsers.length < 1) {
-                logMsg("No users found, restarting...", broadcast);
+                noUsersFoundCount++;
+                logMsg(`No users found, restarting...${noUsersFoundCount}`, broadcast);
+
+                if (noUsersFoundCount > 3) {
+                    logMsg("Restart limit reached - skipping to the next group", broadcast);
+                    break;
+                }
+
                 continue; // Skip to the next iteration of the while loop
+
             }
             break; // Exit the loop if users are found
         }
@@ -205,7 +218,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
         } 
     
         
-        await randomHalt(3, 7, broadcast);
+        await randomHalt(2, 5, broadcast);
     
     
         // Post message in groupchat with custom message
