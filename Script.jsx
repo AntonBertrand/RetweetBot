@@ -145,7 +145,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
             logMsg(`Navigating to Twitter Group: ${twitterGroupId}`, broadcast);
             await page.goto(twitterGroup.url);
 
-            await randomHalt(8, 30, broadcast);
+            await randomHalt(10, 30, broadcast);
     
             try {
                 logMsg("Waiting for group chat to load", broadcast);
@@ -171,7 +171,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
     
             await randomHalt(4, 11, broadcast);
             await cookieDisclaimercheck(broadcast);
-            await randomHalt(3, 7, broadcast);
+            await randomHalt(1, 4, broadcast);
     
             const elements = await page.$$('a.css-175oi2r.r-1pi2tsx.r-13qz1uu.r-o7ynqc.r-6416eg.r-1ny4l3l.r-1loqt21');
             scrapedTwitterUsers = []; // Clear the array at the start of each iteration
@@ -235,7 +235,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
         }
     
         
-        await randomHalt(2, 5, broadcast);
+        await randomHalt(1, 4, broadcast);
     
     
         // Post message in groupchat with custom message
@@ -283,7 +283,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
             }
         }
     
-        await randomHalt(3, 7, broadcast);
+        await randomHalt(2, 5, broadcast);
         await context.close();
         await browser.close();
     } catch (error) {
