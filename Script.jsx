@@ -46,6 +46,7 @@ const secondsBetweenGroupLists = 7200; */
 const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast) => {
 
     let noUsersFoundCount = 0;
+    let navigationFailedCount = 0;
     let skipGroup = false;
 
     console.log(`Proxy Address: ${proxyAddress} Proxy Username: ${proxyUsername}  Proxy Password: ${proxyPassword}  Client Name: ${clientName}`);
@@ -142,8 +143,23 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
     try {
         while (true) {
 
-            logMsg(`Navigating to Twitter Group: ${twitterGroupId}`, broadcast);
-            await page.goto(twitterGroup.url);
+            try {
+                logMsg(`Navigating to Twitter Group: ${twitterGroupId}`, broadcast);
+                await page.goto(twitterGroup.url);
+            } catch (error) {
+                logMsg(`Failed to navigate to Twitter Group: ${twitterGroupId}`, broadcast);
+                navigationFailedCount++;
+
+                if (navigationFailedCount >= 3) {
+                    logMsg("Restart limit reached!", broadcast);
+                    skipGroup = true;
+                    break;
+                }
+
+                logMsg(`Retrying navigation... ${navigationFailedCount}`, broadcast);
+                continue;
+            }
+
 
             await randomHalt(10, 30, broadcast);
     
