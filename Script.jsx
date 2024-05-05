@@ -129,7 +129,34 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
         logMsg(`Group URL possibly valid`, broadcast);
         return false;
     }
-    
+
+    async function fixGroupLoadingBuy(broadcast) {
+
+        const groupInfoBtn = await page.getByLabel('Group info').isVisible();
+
+        if (groupInfoBtn) {
+            logMsg(`Group Info button found`, broadcast)
+            await page.getByLabel('Group info').click();
+            await page.waitForTimeout(2000);
+
+            const backBtn = await page.getByTestId('app-bar-back').isVisible();
+            if (backBtn) {
+                logMsg(`Back button clicked - back to group`, broadcast)
+                await page.getByTestId('app-bar-back').click();
+                await page.waitForTimeout(2000);
+            } else {
+                logMsg(`No back button found`, broadcast)
+                return false;
+            }
+
+        } else {
+            logMsg(`No group info button found`, broadcast)
+            return false;
+        }
+
+        return true;
+
+    }
 
 
     if (!continueRunning) {
@@ -150,7 +177,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                 logMsg(`Failed to navigate to Twitter Group: ${twitterGroupId}`, broadcast);
                 navigationFailedCount++;
 
-                if (navigationFailedCount >= 3) {
+                if (navigationFailedCount >= 2) {
                     logMsg("Restart limit reached!", broadcast);
                     skipGroup = true;
                     break;
@@ -175,14 +202,28 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                     return;
                 }
 
-                if (await connectionErrorCheck(broadcast)) {
-                    retweetFailCount++;
-                    await context.close();
-                    await browser.close();
-                    return;
-                } else {
+                if (await fixGroupLoadingBuy(broadcast)) {
                     await page.waitForSelector('[data-testid="dmComposerTextInput"]');        
+                } else {
+
+                    if (await connectionErrorCheck(broadcast)) {
+                        retweetFailCount++;
+                        await context.close();
+                        await browser.close();
+                        return;
+                    } else {
+                        try {
+                            await page.waitForSelector('[data-testid="dmComposerTextInput"]');   
+                        } catch (error) {
+                            retweetFailCount++;
+                            await context.close();
+                            await browser.close();
+                            return;
+                        }     
+                    }
+
                 }
+
             }
     
             await randomHalt(4, 11, broadcast);
@@ -200,16 +241,29 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
     
             if (scrapedTwitterUsers.length < 1) {
                 noUsersFoundCount++;
-                logMsg(`No users found, restarting...${noUsersFoundCount}`, broadcast);
+                logMsg(`No users found .... ${noUsersFoundCount}`, broadcast);
 
-                if (noUsersFoundCount > 3) {
-                    logMsg("Restart limit reached!", broadcast);
-                    skipGroup = true;
-                    break;
+                if (await fixGroupLoadingBug(broadcast)) {
+                    const elements = await page.$$('a.css-175oi2r.r-1pi2tsx.r-13qz1uu.r-o7ynqc.r-6416eg.r-1ny4l3l.r-1loqt21');
+                    scrapedTwitterUsers = []; // Clear the array at the start of each iteration
+            
+                    for (const element of elements) {
+                        const href = await element.getAttribute('href');
+                        //logMsg(`Found user: ${href}`, broadcast);
+                        scrapedTwitterUsers.push(href);
+                    }
+                } else {
+
+                    if (noUsersFoundCount >= 2) {
+                        logMsg("Restart limit reached!", broadcast);
+                        skipGroup = true;
+                        break;
+                    }
+    
+                    logMsg(`Restarting...`, broadcast);
+                    continue; // Skip to the next iteration of the while loop
+
                 }
-
-                continue; // Skip to the next iteration of the while loop
-
             }
             break; // Exit the loop if users are found
         }
