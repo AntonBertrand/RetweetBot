@@ -82,6 +82,41 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
         }
     }
 
+
+    async function checkForAccLock(broadcast) {
+        await logMsg("Checking for account lock", broadcast);
+        const accLockedMsg = await page.locator('div.PageHeader.Edge', { hasText: 'Your account has been locked.' }).isVisible();
+        if (accLockedMsg) {
+            await logMsg("Account is locked!", broadcast);
+            return true;
+        } else {
+            await logMsg("Account is NOT locked", broadcast);
+            return false;
+        }
+    }
+
+    async function checkForWelcomeMsg(broadcast) {
+        await logMsg("Checking for Welcome to X Message", broadcast);
+        
+        const welcomeMsg = await page.getByText('Welcome to x.com!').isVisible();
+
+        if (welcomeMsg) {
+            await logMsg("Welcome message found!", broadcast);
+            try {
+                await page.getByTestId('xMigrationBottomBar').click();
+                await logMsg("Succesfully closed welcome message!", broadcast);
+                return true;
+            } catch (error) {
+                await logMsg("Failed to close welcome message!", broadcast);
+                return false;
+            }
+        } else {
+            await logMsg("Welcome message NOT found!", broadcast);
+            return false;
+        }
+
+    }
+
     async function connectionErrorCheck(broadcast) {
         let errorCount = 0;
         let error = false;
@@ -137,12 +172,12 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
         if (groupInfoBtn) {
             logMsg(`Group Info button found`, broadcast)
             await page.getByLabel('Group info').click();
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(6000);
 
             const backBtn = await page.getByTestId('app-bar-back').isVisible();
             if (backBtn) {
-                logMsg(`Back button clicked - back to group`, broadcast)
                 await page.getByTestId('app-bar-back').click();
+                logMsg(`Back button clicked - back to group`, broadcast)
                 await page.waitForTimeout(2000);
             } else {
                 logMsg(`No back button found`, broadcast)
@@ -203,8 +238,25 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                 }
 
                 if (await fixGroupLoadingBuy(broadcast)) {
-                    await page.waitForSelector('[data-testid="dmComposerTextInput"]');        
+
+                    try {
+                        await page.waitForSelector('[data-testid="dmComposerTextInput"]');        
+                    } catch (error) {
+                        // If still cannot find group chat after a succesful fixGroupLoadingBug
+                        retweetFailCount++;
+                        await context.close();
+                        await browser.close();
+                        return;
+                    }
+
                 } else {
+
+                    if (await checkForAccLock(broadcast)) {
+                        continueRunning = false;
+                        await context.close();
+                        await browser.close();
+                        return;
+                    }
 
                     if (await connectionErrorCheck(broadcast)) {
                         retweetFailCount++;
@@ -225,7 +277,8 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                 }
 
             }
-    
+
+            await checkForWelcomeMsg(broadcast);
             await randomHalt(4, 11, broadcast);
             await cookieDisclaimercheck(broadcast);
             await randomHalt(1, 4, broadcast);
@@ -305,7 +358,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
         }
     
         
-        await randomHalt(1, 4, broadcast);
+        await randomHalt(4, 7, broadcast);
     
     
         // Post message in groupchat with custom message
