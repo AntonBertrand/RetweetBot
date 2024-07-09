@@ -1,5 +1,55 @@
 const { log } = require('console');
 const { chromium } = require('playwright');
+const fs = require('fs');
+
+const setLoginAuth = async (broadcast) => {
+
+  try {
+      fs.unlinkSync('./LoginAuth.json');
+      logMsg('LoginAuth JSON deleted successfully', broadcast);
+    } catch (err) {
+      logMsg(`Error deleting file: ${err.message}`, broadcast);
+    }
+
+  const browser = await chromium.launch({ 
+      headless: false,
+      proxy: {
+          server: proxyAddress,
+          username: proxyUsername,
+          password: proxyPassword
+        }, 
+  });
+
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  // Logins to Twitter
+  await page.goto('https://twitter.com/i/flow/login');
+  await page.locator('label div').nth(3).fill('AlessaRubii');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByLabel('Password', { exact: true }).click();
+  await page.getByLabel('Password', { exact: true }).fill('BabyPoo123!');
+  await page.getByTestId('LoginForm_Login_Button').click();
+  await page.waitForSelector('[data-testid="AppTabBar_Home_Link"]');
+
+  await page.waitForTimeout(10 * 1000);
+      
+  const welcomeMsg = await page.getByText('Welcome to x.com!').isVisible();
+
+  if (welcomeMsg) {
+          await page.getByTestId('xMigrationBottomBar').click();
+          await logMsg('Succesfully closed welcome message!', broadcast);
+  }
+
+  await page.waitForTimeout(5 * 1000);
+
+  // Save the state to the webpage
+  await page.context().storageState({path: "./LoginAuth.json" });
+
+  await browser.close();
+
+}
+
 
 
 async function retweetPost(user, page, browser, context, broadcast) {
@@ -109,6 +159,26 @@ async function connectionErrorCheck(page, broadcast) {
   }
 
 
+  // Auth Check Function
+
+  const checkForLoginScreen = async (broadcast) => {
+    await logMsg("Checking for login screen", broadcast);
+
+    const signInText = await page.getByText('Sign in to X').isVisible();
+    const signInText2 = await page.getByLabel('Phone, email address, or').isVisible();
+
+    if (signInText || signInText2) {
+        await logMsg("Sign In text found - running login script", broadcast);
+        await setLoginAuth();
+        return true;
+
+    } else {
+        await logMsg("No login screen found", broadcast);
+        return false;
+    }
+
+}
+
 
 
   
@@ -124,6 +194,13 @@ async function connectionErrorCheck(page, broadcast) {
         logMsg(`Retweet Bot Failed, Error: ${error}`, broadcast)
         return;
     }
+
+    if (await checkForLoginScreen(broadcast)) {
+      logMsg("Login issue was found and auth succesfully re-issued!", broadcast);
+      await context.close();
+      await browser.close();
+      return;
+  }
   
     await randomHalt(6, 11, broadcast);
   
