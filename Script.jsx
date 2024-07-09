@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const { retweetPost } = require('./retweetScript.jsx');
+const fs = require('fs');
 
 const userAgentStrings = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.2227.0 Safari/537.36',
@@ -35,13 +36,56 @@ function shuffleArray(array) {
     }
 }    
 
-/* const twitterGroupList = [
-    { url: 'https://twitter.com/messages/1778153056699404702', count: 1 },
-    { url: 'https://twitter.com/messages/1721214576056766674', count: 1 }
-]; */
 
-/* const secondsBetweenGroups = 30;
-const secondsBetweenGroupLists = 7200; */
+const setLoginAuth = async (broadcast) => {
+
+    try {
+        fs.unlinkSync('./LoginAuth.json');
+        logMsg('LoginAuth JSON deleted successfully', broadcast);
+      } catch (err) {
+        logMsg(`Error deleting file: ${err.message}`, broadcast);
+      }
+
+    const browser = await chromium.launch({ 
+        headless: false,
+        proxy: {
+            server: proxyAddress,
+            username: proxyUsername,
+            password: proxyPassword
+          }, 
+    });
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Logins to Twitter
+    await page.goto('https://twitter.com/i/flow/login');
+    await page.locator('label div').nth(3).fill('AlessaRubii');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByLabel('Password', { exact: true }).click();
+    await page.getByLabel('Password', { exact: true }).fill('BabyPoo123!');
+    await page.getByTestId('LoginForm_Login_Button').click();
+    await page.waitForSelector('[data-testid="AppTabBar_Home_Link"]');
+
+    await page.waitForTimeout(10 * 1000);
+        
+    const welcomeMsg = await page.getByText('Welcome to x.com!').isVisible();
+
+    if (welcomeMsg) {
+            await page.getByTestId('xMigrationBottomBar').click();
+            await logMsg('Succesfully closed welcome message!', broadcast);
+    }
+
+    await page.waitForTimeout(5 * 1000);
+
+    // Save the state to the webpage
+    await page.context().storageState({path: "./LoginAuth.json" });
+
+    await browser.close();
+
+}
+
+
 
 const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername, proxyPassword, broadcast) => {
 
@@ -193,6 +237,24 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
 
     }
 
+    const checkForLoginScreen = async (broadcast) => {
+        await logMsg("Checking for login screen", broadcast);
+    
+        const signInText = await page.getByText('Sign in to X').isVisible();
+        const signInText2 = await page.getByLabel('Phone, email address, or').isVisible();
+    
+        if (signInText || signInText2) {
+            await logMsg("Sign In text found - running login script", broadcast);
+            await setLoginAuth();
+            return true;
+    
+        } else {
+            await logMsg("No login screen found", broadcast);
+            return false;
+        }
+    
+    }
+
 
     if (!continueRunning) {
         await context.close();
@@ -229,6 +291,13 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                 logMsg("Waiting for group chat to load", broadcast);
                 await page.waitForSelector('[data-testid="dmComposerTextInput"]');        
             } catch (error) {
+
+                if (await checkForLoginScreen(broadcast)) {
+                    logMsg("Login issue was found and auth succesfully re-issued!", broadcast);
+                    await context.close();
+                    await browser.close();
+                    return;
+                }
 
                 if (await groupInvalid(broadcast)) {
                     retweetFailCount++;
