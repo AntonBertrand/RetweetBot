@@ -2,13 +2,13 @@ const { log } = require('console');
 const { chromium } = require('playwright');
 const fs = require('fs');
 
-const setLoginAuth = async (broadcast) => {
+const setLoginAuth = async () => {
 
   try {
       fs.unlinkSync('./LoginAuth.json');
-      logMsg('LoginAuth JSON deleted successfully', broadcast);
+      logMsg('LoginAuth JSON deleted successfully');
     } catch (err) {
-      logMsg(`Error deleting file: ${err.message}`, broadcast);
+      logMsg(`Error deleting file: ${err.message}`);
     }
 
   const browser = await chromium.launch({ 
@@ -38,7 +38,7 @@ const setLoginAuth = async (broadcast) => {
 
   if (welcomeMsg) {
           await page.getByTestId('xMigrationBottomBar').click();
-          await logMsg('Succesfully closed welcome message!', broadcast);
+          await logMsg('Succesfully closed welcome message!');
   }
 
   await page.waitForTimeout(5 * 1000);
@@ -52,17 +52,16 @@ const setLoginAuth = async (broadcast) => {
 
 
 
-async function retweetPost(user, page, browser, context, broadcast) {
+async function retweetPost(user, page, browser, context) {
 
-  function logMsg(message, broadcast) {
+  function logMsg(message) {
     const time = new Date().toLocaleString();
     console.log(`${time}: ${message}`);
-    broadcast(`${time}: ${message}`);
   }
 
-  async function randomHalt(min, max, broadcast) {
+  async function randomHalt(min, max) {
     const randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    logMsg(`Waiting for ${randomNum} seconds`, broadcast);
+    logMsg(`Waiting for ${randomNum} seconds`);
     await page.waitForTimeout(randomNum * 1000);
   }
   
@@ -71,12 +70,12 @@ async function retweetPost(user, page, browser, context, broadcast) {
     const count = await warnings.count();
 
     if (count > 0) {
-        logMsg(`${count} Sensitive Content Warning(s) Found`, broadcast);
+        logMsg(`${count} Sensitive Content Warning(s) Found`);
 
         for (let i = 0; i < count; i++) {
             const isVisible = await warnings.nth(i).isVisible();
             if (isVisible) {
-                logMsg(`Sensitive Content Warning ${i + 1} is visible`, broadcast);
+                logMsg(`Sensitive Content Warning ${i + 1} is visible`);
                 const button = await page.getByTestId('empty_state_button_text');
                 await button.click();
                 await page.waitForTimeout(6000); // Waits for page to load, consider reworking
@@ -84,7 +83,7 @@ async function retweetPost(user, page, browser, context, broadcast) {
                 // Check if a double click is needed.
                 const isVisibleAgain = await warnings.nth(i).isVisible();
                 if (isVisibleAgain) {
-                    logMsg(`Double-clicking for Warning ${i + 1}`, broadcast);
+                    logMsg(`Double-clicking for Warning ${i + 1}`);
                     if (await button.isVisible()) {
                         await button.click();
                     }
@@ -92,25 +91,25 @@ async function retweetPost(user, page, browser, context, broadcast) {
             }
         }
     } else {
-        logMsg("No Sensitive Content Warnings Found", broadcast);
+        logMsg("No Sensitive Content Warnings Found");
     }
 }
 
 
-async function connectionErrorCheck(page, broadcast) {
+async function connectionErrorCheck(page) {
   let errorCount = 0;
   let error = false;
 
   const connectionError = await page.getByText('Looks like you lost your').isVisible();
   const connectionErrorBtn = await page.getByRole('button', { name: 'Retry' }).isVisible();
 
-  logMsg(`Checking for connection error...`, broadcast)
+  logMsg(`Checking for connection error...`)
 
   if (connectionError && connectionErrorBtn) {
-      logMsg("Connection Error Found!", broadcast);
+      logMsg("Connection Error Found!");
       error = true;
   } else {
-    logMsg(`No connection error found!`, broadcast);
+    logMsg(`No connection error found!`);
     return true;
   }
 
@@ -119,16 +118,16 @@ async function connectionErrorCheck(page, broadcast) {
       const connectionErrorBtn = await page.getByRole('button', { name: 'Retry' }).isVisible();
 
       if (!connectionError || !connectionErrorBtn) {
-          logMsg("Connection Error Resolved!", broadcast);
+          logMsg("Connection Error Resolved!");
           return false; // Error resolved
       }
 
       if (errorCount >= 5) {
-          logMsg(`Connection Error: Retry limit exceeded!`, broadcast);
+          logMsg(`Connection Error: Retry limit exceeded!`);
           return true; // Retry limit exceeded
       }
 
-      logMsg(`Connection Error: Retrying for the ${errorCount + 1} time`, broadcast);
+      logMsg(`Connection Error: Retrying for the ${errorCount + 1} time`);
       await page.getByRole('button', { name: 'Retry' }).click();
       errorCount++;
       await page.waitForTimeout(15000); // Wait after clicking retry
@@ -138,22 +137,22 @@ async function connectionErrorCheck(page, broadcast) {
 }
 
   // Retry Navigation Function
-  async function retryNavigation(url, page, broadcast, attemptCount = 0) {
-    logMsg(`Attempting navigation to: ${url} (${attemptCount + 1})`, broadcast);
+  async function retryNavigation(url, page, attemptCount = 0) {
+    logMsg(`Attempting navigation to: ${url} (${attemptCount + 1})`);
     try {
       await page.goto(url);
       await page.waitForTimeout(10000); // 10 seconds wait
       await page.waitForSelector('[data-testid="userActions"]');
     } catch (error) {
       if (attemptCount >= 2) {
-        logMsg("Navigation failed on all attempts.", broadcast);
-        if ( await connectionErrorCheck(page, broadcast)) {
+        logMsg("Navigation failed on all attempts.");
+        if ( await connectionErrorCheck(page)) {
           throw new Error('Retries failed and no connection error found');
         }
       } else {
-        logMsg(`Navigation failed, retrying... `, broadcast);
+        logMsg(`Navigation failed, retrying... `);
         await page.waitForTimeout(20000); // 30 seconds wait
-        await retryNavigation(url, page, broadcast, attemptCount + 1);
+        await retryNavigation(url, page, attemptCount + 1);
       }
     }
   }
@@ -161,19 +160,19 @@ async function connectionErrorCheck(page, broadcast) {
 
   // Auth Check Function
 
-  const checkForLoginScreen = async (broadcast) => {
-    await logMsg("Checking for login screen", broadcast);
+  const checkForLoginScreen = async () => {
+    await logMsg("Checking for login screen");
 
     const signInText = await page.getByText('Sign in to X').isVisible();
     const signInText2 = await page.getByLabel('Phone, email address, or').isVisible();
 
     if (signInText || signInText2) {
-        await logMsg("Sign In text found - running login script", broadcast);
+        await logMsg("Sign In text found - running login script");
         await setLoginAuth();
         return true;
 
     } else {
-        await logMsg("No login screen found", broadcast);
+        await logMsg("No login screen found");
         return false;
     }
 
@@ -185,28 +184,28 @@ async function connectionErrorCheck(page, broadcast) {
   //--------------------------------START OF THE SCRIPT-----------------------------//
 
   try {
-    logMsg(`Starting Retweet Task (${user})`, broadcast);
+    logMsg(`Starting Retweet Task (${user})`);
 
 
     try {
-      await retryNavigation(`https://twitter.com${user}`, page, broadcast);
+      await retryNavigation(`https://twitter.com${user}`, page);
     } catch (error) {
-        logMsg(`Retweet Bot Failed, Error: ${error}`, broadcast)
+        logMsg(`Retweet Bot Failed, Error: ${error}`)
         return;
     }
 
-    if (await checkForLoginScreen(broadcast)) {
-      logMsg("Login issue was found and auth succesfully re-issued!", broadcast);
+    if (await checkForLoginScreen()) {
+      logMsg("Login issue was found and auth succesfully re-issued!");
       await context.close();
       await browser.close();
       return;
-  }
+    }
   
-    await randomHalt(6, 11, broadcast);
+    await randomHalt(6, 11);
   
     await sensitiveContentWarningCheck()
   
-    await randomHalt(4, 11, broadcast);
+    await randomHalt(4, 11);
   
   
     // Navigates to the users Media
@@ -214,7 +213,7 @@ async function connectionErrorCheck(page, broadcast) {
       await page.getByRole('tab', { name: 'Media' }).click();
     } catch (error) {
             // Likely failed because user has no media
-            logMsg(`Couldn't find the Media tab - Skipping user (${user})`, broadcast)
+            logMsg(`Couldn't find the Media tab - Skipping user (${user})`)
             return;
     }
   
@@ -226,45 +225,45 @@ async function connectionErrorCheck(page, broadcast) {
       await page.waitForSelector('#verticalGridItem-0-profile-grid-0');
     } catch (error) {
       // Likely failed because user has no media
-      logMsg(`No Media found - Skipping user (${user})`, broadcast)
+      logMsg(`No Media found - Skipping user (${user})`)
       return;
     }
   
   
-    await randomHalt(6, 20, broadcast);
+    await randomHalt(6, 20);
   
   
     // Checks if media has a NSFW spoiler
     const mediaSpoiler = await page.locator('#verticalGridItem-0-profile-grid-0').getByRole('button', { name: 'Show' }).isVisible()
     if (mediaSpoiler) {
-      logMsg("Media NSFW Spoiler found", broadcast);
+      logMsg("Media NSFW Spoiler found");
       await page.locator('#verticalGridItem-0-profile-grid-0').getByRole('button', { name: 'Show' }).click();
     } else {
-      logMsg("Media NSFW Spoiler NOT found", broadcast);
+      logMsg("Media NSFW Spoiler NOT found");
     }
   
     // Clicks on the users first Media
     await page.locator('#verticalGridItem-0-profile-grid-0').click();
   
-    await randomHalt(6, 21, broadcast);
+    await randomHalt(6, 21);
   
   
     // Reposts the select media
   
     try {
       await page.getByTestId('retweet').first().click();
-      await randomHalt(1, 5, broadcast);
+      await randomHalt(1, 5);
       await page.getByText('Repost').click();  
     } catch (error) {
-      logMsg(`Failed to Retweet post`, broadcast);
+      logMsg(`Failed to Retweet post`);
     }
   
-    await randomHalt(3, 7, broadcast);
-    logMsg(`Post by ${user} retweeted!`, broadcast);
+    await randomHalt(3, 7);
+    logMsg(`Post by ${user} retweeted!`);
     return true;
   
   } catch (error) {
-    logMsg(`Retweet Bot Failed, Error: ${error}`, broadcast)
+    logMsg(`Retweet Bot Failed, Error: ${error}`)
     await context.close();
     await browser.close();
     return false;
