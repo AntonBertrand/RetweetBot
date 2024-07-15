@@ -228,7 +228,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
         return false;
     }
 
-    async function fixGroupLoadingBuy() {
+    async function fixGroupLoadingBug() {
 
         const groupInfoBtn = await page.getByLabel('Group info').isVisible();
 
