@@ -325,7 +325,7 @@ const retweetBot = async (twitterGroup, clientName, proxyAddress, proxyUsername,
                     return;
                 }
 
-                if (await fixGroupLoadingBuy()) {
+                if (await fixGroupLoadingBug()) {
 
                     try {
                         await page.waitForSelector('[data-testid="dmComposerTextInput"]');        
